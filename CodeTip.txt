@@ -1,0 +1,2 @@
+python print shows in ros2 launch. Add "emulate_tty=True" in the node. 
+

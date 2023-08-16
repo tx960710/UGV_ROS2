@@ -1,0 +1,12 @@
+# go to the USB directory
+cd /media/artlab/Samsung_USB	
+
+# create folder. The folder name is the date of image collection
+mkdir 04_10_2023
+
+# go to the empty folder
+cd 04_10_2023
+
+# recode data
+ros2 bag record Localization/Odom Localization/GPS /Roboclaw/Odom /Teensy/GPS /Teensy/IMU /ReachM2/GPS /camera/depth/image_rect_raw /ra_camera /scan -b 1000000000
+

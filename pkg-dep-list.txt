@@ -1,0 +1,43 @@
+useful pkgs/tools:
+
+sudo apt install python3-colcon-common-extensions
+
+sudo apt-get install openssh-server
+
+sudo apt install nano
+
+sudo apt install net-tools
+
+sudo apt install ros-humble-rmw-cyclonedds-cpp
+
+sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
+
+pip3 install roslibpy
+
+sudo apt install ros-humble-rosbridge-server
+
+sudo apt install ros-humble-slam-toolbox
+
+pip3 install haversine
+
+localization (Optional):
+
+sudo apt install ros-humble-diagnostic-updater
+
+sudo apt install ros-humble-geographic-msgs
+
+sudo apt install geographiclib-*
+
+sudo apt install ros-humble-geographic-*
+
+sudo apt install libgeographic-*
+
+
+roboclaw:
+
+pip3 install pyserial
+
+sudo apt install ros-humble-tf-transformations
+
+pip3 install transforms3d
+
