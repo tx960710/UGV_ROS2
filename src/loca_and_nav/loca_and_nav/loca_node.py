@@ -22,6 +22,7 @@ vel_var = 0.25
 
 odom_subscript_topic = 'Roboclaw/Odom'
 gps_subscript_topic = 'Teensy/GPS'
+gps2_subscript_topic = 'ReachM2/GPS'
 imu_subscript_topic = 'Teensy/IMU'
 publish_rate = 10		#Hz
 fix_datum = False
@@ -31,8 +32,8 @@ datum_yaw = 0
 pub_odom_tf = True
 
 # set original point of the global coordinate, this should be identical for all robots and should be close to the start point of the robot (within 500 m)
-lat_0 = 30.5326515
-lon_0 = -96.4216962
+lat_0 = 30.537253708625634
+lon_0 = -96.42643216988164
 
 # lat/lon to meter linear converter
 lat_to_m = hs.haversine((lat_0, lon_0), (lat_0 + 0.001, lon_0), unit=Unit.METERS)*1000.0
@@ -73,6 +74,7 @@ class Localization(Node):
 
         self.odom_vel_subscription = self.create_subscription(Odometry, odom_subscript_topic, self.vel_update, 10)
         self.gps_subscription = self.create_subscription(NavSatFix, gps_subscript_topic, self.gps_update, 10)
+        self.gps2_subscription = self.create_subscription(NavSatFix, gps2_subscript_topic, self.gps2_update, 10)
         self.imu_subscription = self.create_subscription(Imu, imu_subscript_topic, self.imu_update, 10)
 
         self.timer = self.create_timer(1/publish_rate, self.loca_pub)  #period time in sec, function name
@@ -228,7 +230,21 @@ class Localization(Node):
             K = self.P_k * H.T * S.I
 
             self.x_k += K*y_tilde
-            self.P_k = (np.eye(4) - K*H)*self.P_k        
+            self.P_k = (np.eye(4) - K*H)*self.P_k   
+
+    def gps2_update(self, msg):   
+        H = np. matrix([[1, 0, 0, 0],
+                        [0, 1, 0, 0]])
+        R = np. matrix([[msg.position_covariance[0], 0],
+                        [0, msg.position_covariance[4]]])
+        y = np. matrix([[(msg.longitude - lon_0)*lon_to_m],
+                        [(msg.latitude - lat_0)*lat_to_m]])
+        y_tilde = y - H*self.x_k
+        S = H * self.P_k * H.T + R
+        K = self.P_k * H.T * S.I
+
+        self.x_k += K*y_tilde
+        self.P_k = (np.eye(4) - K*H)*self.P_k
 
     def wrapToPi(self, angle):
         # takes an angle as input and calculates its equivalent value within the range of -pi (exclusive) to pi 

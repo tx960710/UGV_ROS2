@@ -23,7 +23,8 @@ depth_subscript_topic = "camera/aligned_depth_to_color/image_raw"
 enable_camera = True
 publish_rate = 10.0		#Hz
 K_e = 0.8              #K_e = k * rou * q'
-effective_distance = 1.5        #m
+lidar_effective_distance = 1.5        #m
+camera_effective_distance = 0.5         #m
 vehcle_width = 0.426        #m
 vehcle_length = 0.455       #m
 lidar_position_x = 0.09     #m
@@ -41,6 +42,7 @@ fx = 380.35723876953125
 fy = 380.35723876953125
 min_obstacle_height = 0.05      #m
 max_obstacle_height = 0.4       #m
+camera_height = 0.12        #m
 
 obstacle_point_resolution = np.pi*2 / obstacle_point_num
 dt = 1/publish_rate
@@ -105,7 +107,7 @@ class Obstacle_Force(Node):
         count = 0
         len_count = len(msg.ranges)
         while count < len_count:
-            if msg.ranges[count] < effective_distance:      # msg.ranges[count] is the distance
+            if msg.ranges[count] < lidar_effective_distance:      # msg.ranges[count] is the distance
                 if msg.ranges[count] > self.find_boundary_distance(vehcle_width, vehcle_length, lidar_position_x, lidar_position_y, angle):
                     # F = -K_e * msg.angle_increment / msg.ranges[count]
                     # self.F_x_lidar += F * np.cos(angle)
@@ -133,9 +135,9 @@ class Obstacle_Force(Node):
                     x = depth_data[u + v * image_width]
                     y = - (u - cx) * x * fx_inv
                     z = - (v - cy) * x * fy_inv
-                    if z > min_obstacle_height and z < max_obstacle_height:
+                    if z + camera_height > min_obstacle_height and z + camera_height < max_obstacle_height:
                         distance = np.sqrt(x**2 + y**2)
-                        if distance < effective_distance and distance > 0.0:
+                        if distance < camera_effective_distance and distance > 0.0:
                             angle = np.arctan2(y, x) 
                             angle_num = np.divmod(angle + np.pi, obstacle_point_resolution)
                             if int(angle_num[0]) < obstacle_point_num:

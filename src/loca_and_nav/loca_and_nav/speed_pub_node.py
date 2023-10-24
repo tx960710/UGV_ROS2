@@ -23,8 +23,10 @@ speed_pub_topic = 'cmd_vel'
 publish_rate = 10.0		#Hz
 K_w = 1.0
 f_c = 0.3
+back_turn_constant = 5.0
 # f_angular_c = 0.05
 linear_speed_limitation = 0.6       #m/s
+back_speed_limitation = 0.1         #m/s
 angular_speed_limitation = 1.0      #rad/s
 enable_linear_force = True
 
@@ -36,6 +38,7 @@ class Speed_Pub(Node):
     F_x = 0.0
     F_y = 0.0
     linear_vel_last = 0.0
+    enable_obstacle_force = True
     # angular_vel_last = 0.0
 
     def __init__(self):
@@ -59,16 +62,16 @@ class Speed_Pub(Node):
         else:
             vel.angular.z = self.F_y/vel.linear.x
 
-        if np.absolute(vel.linear.x) > linear_speed_limitation:
-            if vel.linear.x >= 0:
-                vel.linear.x = linear_speed_limitation
-            else: 
+        if vel.linear.x > linear_speed_limitation:
+            vel.linear.x = linear_speed_limitation
+        elif vel.linear.x < -back_speed_limitation:     #UGV turn around if backward speed is too fast
+            if vel.linear.x < -linear_speed_limitation: 
                 vel.linear.x = -linear_speed_limitation
-        if np.absolute(vel.angular.z) > angular_speed_limitation:
-            if vel.angular.z >= 0:
-                vel.angular.z = angular_speed_limitation
-            else: 
-                vel.angular.z = -angular_speed_limitation
+            vel.angular.z = back_turn_constant * vel.linear.x
+        if vel.angular.z > angular_speed_limitation:
+            vel.angular.z = angular_speed_limitation
+        elif vel.angular.z < -angular_speed_limitation: 
+            vel.angular.z = -angular_speed_limitation
 
         self.pubVel.publish(vel)
         self.F_x = 0.0
@@ -78,8 +81,9 @@ class Speed_Pub(Node):
 
     def F_obstacle_update(self, msg):
         # vel.header.stamp = self.get_clock().now().to_msg()
-        self.F_x += msg.vector.x
-        self.F_y += msg.vector.y
+        if self.enable_obstacle_force == True:
+            self.F_x += msg.vector.x
+            self.F_y += msg.vector.y
 
     def motor_speed_update(self, msg):
         self.linear_vel_last = msg.twist.twist.linear.x
@@ -89,6 +93,11 @@ class Speed_Pub(Node):
         if enable_linear_force == True:
             self.F_x += msg.vector.x 
             self.F_y += msg.vector.y 
+        
+        if msg.vector.x == 0.0 and msg.vector.y == 0.0:
+            self.enable_obstacle_force = False
+        else:
+            self.enable_obstacle_force = True
 
     # def wrapToPi(self, angle):
     #     # takes an angle as input and calculates its equivalent value within the range of -pi (exclusive) to pi 
