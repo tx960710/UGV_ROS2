@@ -111,7 +111,7 @@ def generate_launch_description():
         # slam,
         # nav2,
         realsense_cam,
-        # Reach_M2,
+        Reach_M2,
         compressed_image,
         localization_ekf,
         web_socket

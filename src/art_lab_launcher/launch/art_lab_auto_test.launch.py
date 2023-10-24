@@ -97,7 +97,7 @@ def generate_launch_description():
         roboclaw,
         lidar,
         realsense_cam,
-        # Reach_M2,
+        Reach_M2,
         localization_ekf,
         web_socket,
         nav_obstacle_force,
