@@ -5,7 +5,7 @@ from geometry_msgs.msg import Twist, Vector3Stamped
 from nav_msgs.msg import Odometry
 import math
 # from std_msgs.msg import String, Bool, Float64, Int8
-from std_msgs.msg import Float64MultiArray
+from std_msgs.msg import Float64MultiArray, Bool
 from sensor_msgs.msg import NavSatFix, Imu
 # import tf_transformations
 # from tf_transformations import euler_from_quaternion
@@ -21,6 +21,7 @@ angle_subscript_topic = 'Localization/Odom'
 position_subscript_topic = 'Localization/GPS'
 goal_postion_subscript_topic = 'goal_point'
 auto_mode_subscript_topic = 'auto_mode'
+enable_obstacle_force_topic = 'force/enable_obstacle_force'
 publish_rate = 10.0		#Hz
 # F_linear_fix = 0.8
 F_linear_fix = 1.2
@@ -68,11 +69,13 @@ class Linear_force(Node):
     P_turn = np.array([0.0, 0.0])
     # angular_vel_last = 0.0
     cmd_last = 10
+    enable_obstacle_force = Bool()
 
     def __init__(self):
         super().__init__("Linear_force")	#node name
 
         self.pubF = self.create_publisher(Vector3Stamped, F_linear_drive_pub_topic, 10)
+        self.pub_enable_obstacle_force = self.create_publisher(Bool, enable_obstacle_force_topic, 10)
         self.angle_subscription = self.create_subscription(Odometry, angle_subscript_topic, self.angle_update, 10)
         self.postion_subscription = self.create_subscription(NavSatFix, position_subscript_topic, self.postion_update, 10)
         self.goal_point_subscription = self.create_subscription(NavSatFix, goal_postion_subscript_topic, self.goal_update, 10)
@@ -85,9 +88,12 @@ class Linear_force(Node):
         self.change_row_orientation = np.arctan2((self.lat_c2 - self.lat_c1) * lat_to_m, (self.lon_c2 - self.lon_c1) * lon_to_m)
         print("Scout orientation: " + str(self.scout_orientation))
         print("Turn orientation: " + str(self.change_row_orientation))
+        self.enable_obstacle_force.data = False
 
     def F_pub(self):
         if self.goal_point_flag == True and self.localization_fix == True:
+            self.enable_obstacle_force.data = True
+            self.pub_enable_obstacle_force.publish(self.enable_obstacle_force)
             self.F_x = F_linear_fix * np.cos(self.F_linear_angle - self.vehicle_angle)
             self.F_y = F_linear_fix * np.sin(self.F_linear_angle - self.vehicle_angle)
             F = Vector3Stamped()
@@ -98,6 +104,8 @@ class Linear_force(Node):
             self.localization_fix = False
         
         elif self.AUTO_MODE == 1 and self.localization_fix == True and self.scout_turn_path != 0:
+            self.enable_obstacle_force.data = True
+            self.pub_enable_obstacle_force.publish(self.enable_obstacle_force)
             self.F_x = F_linear_fix * np.cos(self.F_linear_angle - self.vehicle_angle)
             self.F_y = F_linear_fix * np.sin(self.F_linear_angle - self.vehicle_angle)
             F = Vector3Stamped()
@@ -111,12 +119,9 @@ class Linear_force(Node):
                 self.AUTO_MODE = 0
                 print("Finish scouting!")
                 self.row_count = 0
-        else:
-            F = Vector3Stamped()
-            F.header.stamp = self.get_clock().now().to_msg()
-            F.vector.x = 0.0
-            F.vector.y = 0.0
-            self.pubF.publish(F)
+                self.enable_obstacle_force.data = False
+                self.pub_enable_obstacle_force.publish(self.enable_obstacle_force)
+            
 
     def angle_update(self, msg):
         x = msg.pose.pose.orientation.x
@@ -137,6 +142,8 @@ class Linear_force(Node):
             if np.absolute(self.d_x) < goal_tolerance and np.absolute(self.d_y) < goal_tolerance:
                 self.goal_point_flag = False
                 print("Reach goal point!")
+                self.enable_obstacle_force.data = False
+                self.pub_enable_obstacle_force.publish(self.enable_obstacle_force)
             else:
                 self.F_linear_angle = np.arctan2(self.d_y, self.d_x)
         
@@ -186,6 +193,8 @@ class Linear_force(Node):
                 self.goal_lon = msg.longitude
             else:
                 self.goal_point_flag = False
+                self.enable_obstacle_force.data = False
+                self.pub_enable_obstacle_force.publish(self.enable_obstacle_force)
 
     def auto_mode_update(self, msg):
         cmd = int(msg.data[0])

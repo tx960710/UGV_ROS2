@@ -3,6 +3,7 @@ import numpy as np
 from rclpy.node import Node
 from geometry_msgs.msg import Twist, Vector3Stamped 
 from nav_msgs.msg import Odometry
+from std_msgs.msg import Bool
 
 # from std_msgs.msg import String, Bool, Float64, Int8
 # from sensor_msgs.msg import NavSatFix, Imu
@@ -20,6 +21,7 @@ F_obstacle_subscript_topic = 'force/obstacle'
 F_linear_drive_subscript_topic = 'force/linear_drive'
 motor_speed_subscript_topic = 'Roboclaw/Odom'
 speed_pub_topic = 'cmd_vel'
+enable_obstacle_force_topic = 'force/enable_obstacle_force'
 publish_rate = 10.0		#Hz
 K_w = 1.0
 f_c = 0.3
@@ -49,6 +51,7 @@ class Speed_Pub(Node):
         self.F_obstacle_subscription = self.create_subscription(Vector3Stamped, F_obstacle_subscript_topic, self.F_obstacle_update, 10)
         self.F_obstacle_subscription = self.create_subscription(Vector3Stamped, F_linear_drive_subscript_topic, self.F_linear_drive_update, 10)
         self.motor_speed_subscription = self.create_subscription(Odometry, motor_speed_subscript_topic, self.motor_speed_update, 10)
+        self.enable_obstacle_force_subscription = self.create_subscription(Bool, enable_obstacle_force_topic, self.enable_obstacle_force_update, 10)
 
         self.timer = self.create_timer(dt, self.loca_pub)  #period time in sec, function name
 
@@ -93,11 +96,14 @@ class Speed_Pub(Node):
         if enable_linear_force == True:
             self.F_x += msg.vector.x 
             self.F_y += msg.vector.y 
+
+    def enable_obstacle_force_update(self, msg):
+        self.enable_obstacle_force = msg.data
         
-        if msg.vector.x == 0.0 and msg.vector.y == 0.0:
-            self.enable_obstacle_force = False
-        else:
-            self.enable_obstacle_force = True
+        # if msg.vector.x == 0.0 and msg.vector.y == 0.0:
+        #     self.enable_obstacle_force = False
+        # else:
+        #     self.enable_obstacle_force = True
 
     # def wrapToPi(self, angle):
     #     # takes an angle as input and calculates its equivalent value within the range of -pi (exclusive) to pi 
