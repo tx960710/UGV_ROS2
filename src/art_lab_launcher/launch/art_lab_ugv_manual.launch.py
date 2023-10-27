@@ -40,10 +40,17 @@ def generate_launch_description():
 
     lidar = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rplidar_ros'), 'launch'),
-         '/rplidar.launch.py'])
+         get_package_share_directory('sllidar_ros2'), 'launch'),
+         '/sllidar_a1_launch.py'])
       ) 
-
+      
+    
+    lidar_s2 = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('sllidar_ros2'), 'launch'),
+         '/sllidar_s2_launch.py'])
+      ) 
+    
     #slam = IncludeLaunchDescription(
     #  PythonLaunchDescriptionSource([os.path.join(
     #     get_package_share_directory('slam_toolbox'), 'launch'),
@@ -108,6 +115,7 @@ def generate_launch_description():
         roboclaw,
         # ekf,
         lidar,
+        # lidar_s2,
         # slam,
         # nav2,
         realsense_cam,

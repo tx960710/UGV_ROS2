@@ -28,9 +28,16 @@ def generate_launch_description():
 
     lidar = IncludeLaunchDescription(
       PythonLaunchDescriptionSource([os.path.join(
-         get_package_share_directory('rplidar_ros'), 'launch'),
-         '/rplidar.launch.py'])
+         get_package_share_directory('sllidar_ros2'), 'launch'),
+         '/sllidar_a1_launch.py'])
       ) 
+      
+    
+    lidar_s2 = IncludeLaunchDescription(
+      PythonLaunchDescriptionSource([os.path.join(
+         get_package_share_directory('sllidar_ros2'), 'launch'),
+         '/sllidar_s2_launch.py'])
+      )  
     
     #K. Lee's code
     realsense_cam = IncludeLaunchDescription(
@@ -96,6 +103,7 @@ def generate_launch_description():
         teensySensors,
         roboclaw,
         lidar,
+        # lidar_s2,
         realsense_cam,
         Reach_M2,
         localization_ekf,
