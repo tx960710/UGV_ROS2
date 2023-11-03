@@ -28,8 +28,13 @@ F_linear_fix = 1.2
 goal_tolerance = 0.3        #m
 
 # set original point of the global coordinate, this should be identical for all robots and should be close to the start point of the robot (within 500 m)
-lat_0 = 30.537253708625634
-lon_0 = -96.42643216988164
+# Farm
+# lat_0 = 30.537253708625634
+# lon_0 = -96.42643216988164
+
+# TAMU CS
+lat_0 = 30.6126599
+lon_0 = -96.3431303
 
 # lat/lon to meter linear converter
 lat_to_m = hs.haversine((lat_0, lon_0), (lat_0 + 0.001, lon_0), unit=Unit.METERS)*1000.0

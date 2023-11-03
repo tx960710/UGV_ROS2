@@ -23,13 +23,13 @@ motor_speed_subscript_topic = 'Roboclaw/Odom'
 speed_pub_topic = 'cmd_vel'
 enable_obstacle_force_topic = 'force/enable_obstacle_force'
 publish_rate = 10.0		#Hz
-K_w = 1.0
+K_w = 1.5
 f_c = 0.3
 back_turn_constant = 5.0
 # f_angular_c = 0.05
-linear_speed_limitation = 0.6       #m/s
+linear_speed_limitation = 1.0       #m/s
 back_speed_limitation = 0.1         #m/s
-angular_speed_limitation = 1.0      #rad/s
+angular_speed_limitation = 1.2      #rad/s
 enable_linear_force = True
 
 dt = 1/publish_rate
@@ -40,7 +40,7 @@ class Speed_Pub(Node):
     F_x = 0.0
     F_y = 0.0
     linear_vel_last = 0.0
-    enable_obstacle_force = True
+    enable_obstacle_force = False
     # angular_vel_last = 0.0
 
     def __init__(self):
@@ -60,17 +60,31 @@ class Speed_Pub(Node):
         vel.linear.x = self.linear_vel_last * (1.0 - f_c) + self.F_x * dt
         # self.F_y -= self.angular_vel_last * f_angular_c
 
-        if vel.linear.x == 0:
+        # if vel.linear.x == 0:
+        #     vel.angular.z = self.F_y * K_w
+        # else:
+        #     vel.angular.z = self.F_y/vel.linear.x
+
+        # if vel.linear.x > linear_speed_limitation:
+        #     vel.linear.x = linear_speed_limitation
+        # elif vel.linear.x < -back_speed_limitation:     #UGV turn around if backward speed is too fast
+        #     if vel.linear.x < -linear_speed_limitation: 
+        #         vel.linear.x = -linear_speed_limitation
+        #     vel.angular.z = back_turn_constant * vel.linear.x
+        # if vel.angular.z > angular_speed_limitation:
+        #     vel.angular.z = angular_speed_limitation
+        # elif vel.angular.z < -angular_speed_limitation: 
+        #     vel.angular.z = -angular_speed_limitation
+
+        
+        if vel.linear.x > linear_speed_limitation:
+            vel.linear.x = linear_speed_limitation
+        elif vel.linear.x < 0.0:     
+            vel.linear.x = 0.0
+        if vel.linear.x == 0.0:
             vel.angular.z = self.F_y * K_w
         else:
             vel.angular.z = self.F_y/vel.linear.x
-
-        if vel.linear.x > linear_speed_limitation:
-            vel.linear.x = linear_speed_limitation
-        elif vel.linear.x < -back_speed_limitation:     #UGV turn around if backward speed is too fast
-            if vel.linear.x < -linear_speed_limitation: 
-                vel.linear.x = -linear_speed_limitation
-            vel.angular.z = back_turn_constant * vel.linear.x
         if vel.angular.z > angular_speed_limitation:
             vel.angular.z = angular_speed_limitation
         elif vel.angular.z < -angular_speed_limitation: 
